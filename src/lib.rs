@@ -45,11 +45,19 @@ compile_error!("feature \"lz4\" and feature \"lz4_flex\" cannot be enabled at th
 /// bytes are not recognized or not enough bytes can be read to
 /// determine the format.
 pub fn auto_decompress<'a, B: 'a + BufRead>(mut r: B) -> Box<dyn BufRead + 'a> {
-    use CompressionFormat::*;
-
     let Some(format) = guess_compression_format(&mut r) else {
         return Box::new(r)
     };
+    decompress_as(r, format)
+}
+
+/// Decompress assuming the given format
+pub fn decompress_as<'a, B: 'a + BufRead>(
+    r: B,
+    format: CompressionFormat
+) -> Box<dyn BufRead + 'a> {
+    use CompressionFormat::*;
+
     match format {
         #[cfg(feature = "bzip2")]
         Bzip2 => {
