@@ -30,9 +30,12 @@
 //!
 //! `lz4` and `lz4_flex` are incompatible, at most one them can be
 //! enabled. `zlib-ng` supersedes `flate2`.
+mod parallel;
+
 use std::io::{BufRead, BufReader};
 
 use log::debug;
+use parallel::ParDecompressor;
 
 #[cfg(all(feature = "lz4", feature = "lz4_flex"))]
 compile_error!("feature \"lz4\" and feature \"lz4_flex\" cannot be enabled at the same time");
@@ -90,6 +93,31 @@ pub fn decompress_as<'a, B: 'a + BufRead>(
             Box::new(r)
         }
     }
+}
+
+/// Automatic parallelised decompression
+///
+/// See [auto_decompress], but the decompression is done in parallel
+/// by a background worker thread.
+pub fn par_auto_decompress<B>(mut r: B) -> Box<dyn BufRead>
+where
+    B: BufRead + Send + Sync + 'static
+{
+    let Some(format) = guess_compression_format(&mut r) else {
+        return Box::new(r)
+    };
+    Box::new(par_decompress_as(r, format))
+}
+
+/// Decompress in parallel assuming the given format
+pub fn par_decompress_as<B>(
+    r: B,
+    format: CompressionFormat
+) -> impl BufRead
+where
+    B: BufRead + Send + Sync + 'static
+{
+    BufReader::new(ParDecompressor::new(r, format))
 }
 
 /// Compression format
