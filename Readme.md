@@ -20,12 +20,14 @@ input.read_to_string(&mut decompressed)?;
 
 Each feature enables a decompression format
 
-- `flate2` (default)
+- `zlib-ng` (default)
 - `zstd` (default)
 - `bzip2`
 - `lz4`
 - `lz4_flex`
+- `flate2`
 
-`lz4` and `lz4_flex` are incompatible, at most one them can be enabled.
+`lz4` and `lz4_flex` are incompatible, at most one them can be
+enabled. `zlib-ng` supersedes `flate2`.
 
 License: GPL-3.0-or-later

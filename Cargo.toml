@@ -19,4 +19,5 @@ lz4_flex = { version = "0.11", optional = true }
 zstd = { version = "0.12", optional = true }
 
 [features]
-default = ["flate2", "zstd"]
+default = ["zlib-ng", "zstd"]
+zlib-ng = ["flate2/zlib-ng"]

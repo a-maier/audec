@@ -21,13 +21,15 @@
 //!
 //! Each feature enables a decompression format
 //!
-//! - `flate2` (default)
+//! - `zlib-ng` (default)
 //! - `zstd` (default)
 //! - `bzip2`
 //! - `lz4`
 //! - `lz4_flex`
+//! - `flate2`
 //!
-//! `lz4` and `lz4_flex` are incompatible, at most one them can be enabled.
+//! `lz4` and `lz4_flex` are incompatible, at most one them can be
+//! enabled. `zlib-ng` supersedes `flate2`.
 use std::io::{BufRead, BufReader};
 
 use log::debug;
