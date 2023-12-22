@@ -59,7 +59,7 @@ pub fn auto_decompress<'a, B: 'a + BufRead>(mut r: B) -> Box<dyn BufRead + 'a> {
         #[cfg(feature = "flate2")]
         Deflate => {
             debug!("Decompress as Deflate");
-            Box::new(BufReader::new(flate2::read::GzDecoder::new(r)))
+            Box::new(BufReader::new(flate2::bufread::GzDecoder::new(r)))
         },
         #[cfg(feature = "lz4")]
         Lz4 => {
