@@ -49,7 +49,7 @@ compile_error!("feature \"lz4\" and feature \"lz4_flex\" cannot be enabled at th
 /// determine the format.
 pub fn auto_decompress<'a, B: 'a + BufRead>(mut r: B) -> Box<dyn BufRead + 'a> {
     let Some(format) = guess_compression_format(&mut r) else {
-        return Box::new(r)
+        return Box::new(r);
     };
     decompress_as(r, format)
 }
@@ -57,7 +57,7 @@ pub fn auto_decompress<'a, B: 'a + BufRead>(mut r: B) -> Box<dyn BufRead + 'a> {
 /// Decompress assuming the given format
 pub fn decompress_as<'a, B: 'a + BufRead>(
     r: B,
-    format: CompressionFormat
+    format: CompressionFormat,
 ) -> Box<dyn BufRead + 'a> {
     use CompressionFormat::*;
 
@@ -66,27 +66,27 @@ pub fn decompress_as<'a, B: 'a + BufRead>(
         Bzip2 => {
             debug!("Decompress as bzip2");
             Box::new(BufReader::new(bzip2::read::BzDecoder::new(r)))
-        },
+        }
         #[cfg(feature = "flate2")]
         Deflate => {
             debug!("Decompress as Deflate");
             Box::new(BufReader::new(flate2::bufread::GzDecoder::new(r)))
-        },
+        }
         #[cfg(feature = "lz4")]
         Lz4 => {
             debug!("Decompress as lz4");
             Box::new(BufReader::new(lz4::Decoder::new(r).unwrap()))
-        },
+        }
         #[cfg(feature = "lz4_flex")]
         Lz4 => {
             debug!("Decompress as lz4");
             Box::new(BufReader::new(lz4_flex::frame::FrameDecoder::new(r)))
-        },
+        }
         #[cfg(feature = "zstd")]
         Zstd => {
             debug!("Decompress as zstd");
             Box::new(BufReader::new(zstd::stream::Decoder::new(r).unwrap()))
-        },
+        }
         #[allow(unreachable_patterns)]
         _ => {
             debug!("No decompression");
@@ -101,21 +101,18 @@ pub fn decompress_as<'a, B: 'a + BufRead>(
 /// by a background worker thread.
 pub fn par_auto_decompress<B>(mut r: B) -> Box<dyn BufRead>
 where
-    B: BufRead + Send + Sync + 'static
+    B: BufRead + Send + Sync + 'static,
 {
     let Some(format) = guess_compression_format(&mut r) else {
-        return Box::new(r)
+        return Box::new(r);
     };
     Box::new(par_decompress_as(r, format))
 }
 
 /// Decompress in parallel assuming the given format
-pub fn par_decompress_as<B>(
-    r: B,
-    format: CompressionFormat
-) -> impl BufRead
+pub fn par_decompress_as<B>(r: B, format: CompressionFormat) -> impl BufRead
 where
-    B: BufRead + Send + Sync + 'static
+    B: BufRead + Send + Sync + 'static,
 {
     BufReader::new(ParDecompressor::new(r, format))
 }
@@ -138,7 +135,9 @@ pub enum CompressionFormat {
 /// The format is determined by looking at the leading magic
 /// bytes. Returns `None` if the magic bytes are not recognized or not
 /// enough bytes can be read to determine the format.
-pub fn guess_compression_format<B: BufRead>(r: &mut B) -> Option<CompressionFormat> {
+pub fn guess_compression_format<B: BufRead>(
+    r: &mut B,
+) -> Option<CompressionFormat> {
     use CompressionFormat::*;
 
     let Ok(bytes) = r.fill_buf() else {
@@ -149,7 +148,7 @@ pub fn guess_compression_format<B: BufRead>(r: &mut B) -> Option<CompressionForm
         &[0x1f, 0x8b, ..] => Some(Deflate),
         &[0x04, 0x22, 0x4d, 0x18, ..] => Some(Lz4),
         &[0x28, 0xb5, 0x2f, 0xfd, ..] => Some(Zstd),
-        _ => None
+        _ => None,
     }
 }
 
@@ -162,8 +161,9 @@ mod tests {
     fn bzip2_empty() {
         let source = [
             0x42, 0x5a, 0x68, 0x39, 0x17, 0x72, 0x45, 0x38, 0x50, 0x90, 0x00,
-            0x00, 0x00, 0x00
-        ].as_slice();
+            0x00, 0x00, 0x00,
+        ]
+        .as_slice();
         let mut reader = auto_decompress(source);
         let mut buf = Vec::new();
         assert_eq!(reader.read_to_end(&mut buf).unwrap(), 0)
@@ -175,8 +175,9 @@ mod tests {
         let source = [
             0x1f, 0x8b, 0x08, 0x08, 0x7e, 0x70, 0xca, 0x64, 0x00, 0x03, 0x66,
             0x6f, 0x6f, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00
-        ].as_slice();
+            0x00, 0x00,
+        ]
+        .as_slice();
         let mut reader = auto_decompress(source);
         let mut buf = Vec::new();
         assert_eq!(reader.read_to_end(&mut buf).unwrap(), 0)
@@ -187,8 +188,9 @@ mod tests {
     fn lz4_empty() {
         let source = [
             0x04, 0x22, 0x4d, 0x18, 0x64, 0x40, 0xa7, 0x00, 0x00, 0x00, 0x00,
-            0x05, 0x5d, 0xcc, 0x02
-        ].as_slice();
+            0x05, 0x5d, 0xcc, 0x02,
+        ]
+        .as_slice();
         let mut reader = auto_decompress(source);
         let mut buf = Vec::new();
         assert_eq!(reader.read_to_end(&mut buf).unwrap(), 0)
@@ -199,8 +201,9 @@ mod tests {
     fn zstd_empty() {
         let source = [
             0x28, 0xb5, 0x2f, 0xfd, 0x24, 0x00, 0x01, 0x00, 0x00, 0x99, 0xe9,
-            0xd8, 0x51
-        ].as_slice();
+            0xd8, 0x51,
+        ]
+        .as_slice();
         let mut reader = auto_decompress(source);
         let mut buf = Vec::new();
         assert_eq!(reader.read_to_end(&mut buf).unwrap(), 0)
@@ -213,5 +216,4 @@ mod tests {
         let mut buf = Vec::new();
         assert_eq!(reader.read_to_end(&mut buf).unwrap(), 0)
     }
-
 }

@@ -1,8 +1,12 @@
-use std::{sync::mpsc::{channel, Receiver}, thread::spawn, io::{BufRead, Read}};
+use std::{
+    io::{BufRead, Read},
+    sync::mpsc::{channel, Receiver},
+    thread::spawn,
+};
 
 use log::debug;
 
-use crate::{CompressionFormat, decompress_as};
+use crate::{decompress_as, CompressionFormat};
 
 #[derive(Debug)]
 pub(crate) struct ParDecompressor {
@@ -33,7 +37,7 @@ impl ParDecompressor {
                             Ok(res)
                         }
                     }
-                    Err(err) => Err(err)
+                    Err(err) => Err(err),
                 };
                 if w_decompressed.send(read).is_err() {
                     debug!("Failed to write to channel");
@@ -44,7 +48,7 @@ impl ParDecompressor {
         Self {
             r_decompressed,
             buf: Vec::new(),
-            pos: 0
+            pos: 0,
         }
     }
 }
